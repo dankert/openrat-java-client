@@ -20,6 +20,8 @@ Boston, MA  02110-1301, USA.
  */
 package de.openrat.client.util;
 
+import java.util.List;
+
 
 /**
  * @author Jan Dankert
@@ -27,9 +29,9 @@ package de.openrat.client.util;
 public class CMSResponse
 {
 
-	private CMSError[] error;
+	private List<CMSNotice> notices;
+	private List<String> validationErrors;
 	private CMSNode output;
-	private CMSControl control;
 	private CMSSession session;
 	private int httpStatus;
 
@@ -41,9 +43,9 @@ public class CMSResponse
 	 * 
 	 * @return error
 	 */
-	public CMSError[] getError()
+	public List<CMSNotice> getNotices()
 	{
-		return error;
+		return notices;
 	}
 
 	/**
@@ -52,9 +54,27 @@ public class CMSResponse
 	 * @param error
 	 *            error
 	 */
-	public void setError(CMSError[] error)
+	public void setNotices(List<CMSNotice> error)
 	{
-		this.error = error;
+		this.notices = error;
+	}
+
+	
+	/**
+	 * List of input fields with validation errors.
+	 * @return
+	 */
+	public List<String> getValidationErrors()
+	{
+		return validationErrors;
+	}
+
+	/**
+	 * @param validationErrors
+	 */
+	public void setValidationErrors(List<String> validationErrors)
+	{
+		this.validationErrors = validationErrors;
 	}
 
 	/**
@@ -76,27 +96,6 @@ public class CMSResponse
 	public void setOutput(CMSNode cmsNode)
 	{
 		this.output = cmsNode;
-	}
-
-	/**
-	 * Inhalt des Feldes <code>control</code>.
-	 * 
-	 * @return control
-	 */
-	public CMSControl getControl()
-	{
-		return control;
-	}
-
-	/**
-	 * Setzt das Feld <code>control</code>.
-	 * 
-	 * @param control
-	 *            control
-	 */
-	public void setControl(CMSControl control)
-	{
-		this.control = control;
 	}
 
 	/**

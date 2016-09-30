@@ -21,6 +21,19 @@ public class LoginAction extends Action
 		super(connection, "login");
 	}
 
+	/**
+	 * Login.
+	 * 
+	 * @param username
+	 *            username
+	 * @param password
+	 *            password
+	 * @param databaseId
+	 *            database-id
+	 * @return {@link User}
+	 * @throws LoginException
+	 *             if credentials are wrong
+	 */
 	public User login(String username, String password, String databaseId) throws LoginException
 	{
 

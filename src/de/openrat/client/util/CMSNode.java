@@ -48,6 +48,22 @@ public class CMSNode
 		return value;
 	}
 
+	public boolean isTrue()
+	{
+		return Boolean.valueOf(value).booleanValue();
+	}
+
+	public int toInt()
+	{
+		return NumberUtils.toInt(value);
+	}
+
+	public long toLong()
+	{
+		return NumberUtils.toLong(value);
+	}
+
+
 	public String getName()
 	{
 		return name;

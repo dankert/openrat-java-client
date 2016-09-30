@@ -28,30 +28,26 @@ import de.openrat.client.action.LoginAction;
 import de.openrat.client.util.CMSConnection;
 
 /**
- * API-Request to the OpenRat Content Management System. <br>
+ * Client for the OpenRat Content Management System. <br>
  * <br>
- * The call to the CMS server is done via a (non-SSL) HTTP connection.<br>
+ * The call to the CMS server is done via a HTTP connection.<br>
  * <br>
- * Before a call you are able to set some key/value-pairs as parameters. After
- * calling the CMS a DOM-document is returned, which contains the server
- * response.<br>
  * Example <br>
  * 
  * <pre>
- * CMSRequest request = new CMSRequest(&quot;your.openrat.example.com&quot;);
- * // prints tracing information to stdout.
- * request.trace = true;
+ * CMSClient client = new CMSClient(&quot;demo.openrat.de&quot;, &quot;/latest-snapshot/openrat/dispatcher.php&quot;, 80);
+ * client.setLogWriter(new PrintWriter(System.out, true));
+ * // client.setProxy(&quot;proxy.mycompany.exmaple&quot;, 8080, &quot;user&quot;, &quot;pass&quot;);
+ * client.setLocale(Locale.GERMAN);
+ * LoginAction loginAction = client.getLoginAction();
+ * 
  * try
  * {
- * 	request.parameter.put(&quot;action&quot;, &quot;index&quot;);
- * 	request.parameter.put(&quot;subaction&quot;, &quot;showlogin&quot;); // login page
- * 	request.parameter.put(&quot;...&quot;, &quot;...&quot;);
- * 	Document response = request.call();
- * 	// now traverse through the dom tree and get your information.
+ * 	loginAction.login(&quot;admin&quot;, &quot;admin&quot;, &quot;db1&quot;);
  * }
- * catch (IOException e)
+ * catch (LoginException e)
  * {
- * 	// your error handling.
+ * 	fail(&quot;Login failed&quot; + e.getLocalizedMessage());
  * }
  * </pre>
  * 
@@ -59,7 +55,7 @@ import de.openrat.client.util.CMSConnection;
  */
 public class CMSClient
 {
-
+	// the api version which we are supporting
 	public final static int SUPPORTED_API_VERSION = 2;
 
 	final CMSConnection connection;
@@ -78,7 +74,7 @@ public class CMSClient
 	}
 
 	/**
-	 * Constructs a CMS-Request to the specified server/path.<br>
+	 * Constructs a CMS-Connection to the specified server/path.<br>
 	 * Server-Port is 80.
 	 * 
 	 * @param host
@@ -94,7 +90,7 @@ public class CMSClient
 	}
 
 	/**
-	 * Constructs a CMS-Request to the specified server/path/port.
+	 * Constructs a CMS-Connection to the specified server/path/port.
 	 * 
 	 * @param host
 	 *            hostname
@@ -109,16 +105,31 @@ public class CMSClient
 		this.connection = new CMSConnection(host, port, path);
 	}
 
+	/**
+	 * Action class for login methods.
+	 * 
+	 * @return
+	 */
 	public LoginAction getLoginAction()
 	{
 		return new LoginAction(connection);
 	}
 
+	/**
+	 * you may want to set a LogWriter, in which log messages are written.
+	 * 
+	 * @param logWriter
+	 */
 	public void setLogWriter(PrintWriter logWriter)
 	{
 		this.connection.setLogWriter(logWriter);
 	}
 
+	/**
+	 * CMS Connection
+	 * 
+	 * @return
+	 */
 	public CMSConnection getConnection()
 	{
 		return connection;
@@ -145,6 +156,10 @@ public class CMSClient
 	 *            hostname
 	 * @param port
 	 *            port
+	 * @param user
+	 *            proxy username
+	 * @param password
+	 *            password
 	 */
 	public void setProxy(String host, int port, String user, String password)
 	{
@@ -155,16 +170,32 @@ public class CMSClient
 		this.connection.setProxyPassword(password);
 	}
 
+	/**
+	 * changing the {@link Locale}. Default is the Default-Locale.
+	 * 
+	 * @param locale
+	 */
 	public void setLocale(Locale locale)
 	{
 		connection.setLocale(locale);
 	}
 
+	/**
+	 * Socket-Timeout in milliseconds. Default: 5000.
+	 * 
+	 * @param timeout
+	 */
 	public void setTimeout(int timeout)
 	{
 		connection.setTimeout(timeout);
 	}
 
+	/**
+	 * Experimental Feature, DO <b>NOT</b> SET THIS TO TRUE. HTTP persistent
+	 * connections are not supported!
+	 * 
+	 * @param useKeepAlive
+	 */
 	public void setKeepAlive(boolean useKeepAlive)
 	{
 		connection.setKeepAlive(useKeepAlive);
@@ -176,6 +207,12 @@ public class CMSClient
 		return super.toString() + ": " + String.valueOf(this.connection);
 	}
 
+	/**
+	 * closing all resources. Normally, you do not need to call this, because
+	 * the sockets are closed after each call. this is only for future vesions
+	 * wenn keep-alive is implemented.
+	 * 
+	 */
 	public void close()
 	{
 		if (connection.getSocket() != null)
@@ -192,6 +229,7 @@ public class CMSClient
 	}
 
 	/**
+	 * Closes all resources before finalizing an instance of this class.
 	 * {@inheritDoc}
 	 * 
 	 * @see java.lang.Object#finalize()

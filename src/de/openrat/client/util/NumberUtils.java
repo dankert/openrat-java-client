@@ -21,4 +21,25 @@ public class NumberUtils
 			return 0;
 		}
 	}
+
+	/**
+	 * Null-safe and Exception-safe conversion from {@link String} to
+	 * {@link Long}.
+	 * 
+	 * @param number
+	 *            Number
+	 * @return int (0, if number is not a number)
+	 */
+	public static long toLong(String number)
+	{
+		try
+		{
+			return Long.parseLong(number);
+		}
+		catch (NumberFormatException e)
+		{
+			return 0;
+		}
+	}
+
 }

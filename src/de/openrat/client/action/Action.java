@@ -98,7 +98,11 @@ public abstract class Action
 			CMSResponse response = request.execute();
 			return response;
 		}
-		catch (IOException e)
+		catch (CMSException e)
+		{
+			throw e;
+		}
+		catch (Exception e)
 		{
 			throw new CMSException(e);
 		}

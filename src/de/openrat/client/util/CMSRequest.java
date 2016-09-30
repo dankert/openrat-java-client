@@ -41,6 +41,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import de.openrat.client.CMSClient;
+import de.openrat.client.util.CMSNotice.CMSErrorStatus;
 import de.openrat.client.util.HttpRequest.HttpMethod;
 
 /**
@@ -212,41 +213,7 @@ public class CMSRequest
 			{
 				// Server reports an answer
 
-				// Do we support the server api version?
-				int apiVersion = Integer.parseInt(rootNode.getChild("api").getValue());
-
-				if (apiVersion != CMSClient.SUPPORTED_API_VERSION)
-				{
-					// oh no, the server api is older or newer than our client
-					// api.
-					// there is nothing we can do.
-					throw new CMSException("Only API Version 2 is supported. The server is using API Version " + rootNode.getChild("api"));
-				}
-
-				CMSResponse cmsResponse = new CMSResponse();
-
-				cmsResponse.setApi(apiVersion);
-				cmsResponse.setVersion(rootNode.getChild("version").getValue());
-
-				List<CMSError> errorList = new ArrayList<CMSError>();
-				for (CMSNode errorNode : rootNode.getChild("errors").getChildren())
-				{
-					CMSError error = new CMSError();
-					errorList.add(error);
-				}
-				cmsResponse.setError(errorList.toArray(new CMSError[] {}));
-
-				CMSControl control = new CMSControl();
-				cmsResponse.setControl(control);
-
-				CMSNode sessionNode = rootNode.getChild("session");
-				CMSSession session = new CMSSession();
-				session.setName(sessionNode.getChild("name").getValue());
-				session.setId(sessionNode.getChild("id").getValue());
-				session.setToken(sessionNode.getChild("token").getValue());
-				cmsResponse.setSession(session);
-
-				cmsResponse.setOutput(rootNode.getChild("outpout"));
+				CMSResponse cmsResponse = createCMSReponse(rootNode);
 
 				return cmsResponse;
 			}
@@ -261,6 +228,64 @@ public class CMSRequest
 			// Unknown HTTP Status
 			throw new CMSException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "Unsupported HTTP Status");
 		}
+	}
+
+	private CMSResponse createCMSReponse(final CMSNode rootNode)
+	{
+
+		CMSResponse cmsResponse = new CMSResponse();
+
+		// Do we support the server api version?
+		int apiVersion = Integer.parseInt(rootNode.getChild("api").getValue());
+
+		if (apiVersion != CMSClient.SUPPORTED_API_VERSION)
+		{
+			// oh no, the server api is older or newer than our client
+			// api.
+			// there is nothing we can do.
+			throw new CMSException("Only API Version 2 is supported. The server is using API Version " + rootNode.getChild("api"));
+		}
+
+		cmsResponse.setApi(apiVersion);
+		cmsResponse.setVersion(rootNode.getChild("version").getValue());
+
+		List<String> errorList = new ArrayList<String>();
+		for (CMSNode errorNode : rootNode.getChild("errors").getChildren())
+		{
+			errorList.add(errorNode.getValue());
+		}
+		cmsResponse.setValidationErrors(errorList);
+
+		List<CMSNotice> noticeList = new ArrayList<CMSNotice>();
+
+		for (CMSNode noticeNode : rootNode.getChild("notices").getChildren())
+		{
+			CMSNotice error = new CMSNotice();
+			error.setKey(noticeNode.getChild("key").getValue());
+			error.setType(noticeNode.getChild("type").getValue());
+			error.setName(noticeNode.getChild("name").getValue());
+			error.setText(noticeNode.getChild("text").getValue());
+
+			String status = noticeNode.getChild("status").getValue();
+			if (status.equalsIgnoreCase("ok"))
+				error.setStatus(CMSErrorStatus.NOTICE);
+			else if (status.equalsIgnoreCase("warning"))
+				error.setStatus(CMSErrorStatus.WARN);
+			else
+				error.setStatus(CMSErrorStatus.ERROR);
+			noticeList.add(error);
+		}
+		cmsResponse.setNotices(noticeList);
+
+		CMSNode sessionNode = rootNode.getChild("session");
+		CMSSession session = new CMSSession();
+		session.setName(sessionNode.getChild("name").getValue());
+		session.setId(sessionNode.getChild("id").getValue());
+		session.setToken(sessionNode.getChild("token").getValue());
+		cmsResponse.setSession(session);
+
+		cmsResponse.setOutput(rootNode.getChild("outpout"));
+		return cmsResponse;
 	}
 
 	public void setLogWriter(PrintWriter logWriter)

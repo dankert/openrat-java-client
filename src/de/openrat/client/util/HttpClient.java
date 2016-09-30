@@ -36,37 +36,18 @@ import javax.xml.bind.DatatypeConverter;
 import de.openrat.client.util.HttpRequest.HttpMethod;
 
 /**
- * API-Request to the OpenRat Content Management System. <br>
- * <br>
- * The call to the CMS server is done via a (non-SSL) HTTP connection.<br>
- * <br>
- * Before a call you are able to set some key/value-pairs as parameters. After
- * calling the CMS a DOM-document is returned, which contains the server
- * response.<br>
- * Example <br>
- * 
- * <pre>
- * CMSRequest request = new CMSRequest(&quot;your.openrat.example.com&quot;);
- * // prints tracing information to stdout.
- * request.trace = true;
- * try
- * {
- * 	request.parameter.put(&quot;action&quot;, &quot;index&quot;);
- * 	request.parameter.put(&quot;subaction&quot;, &quot;showlogin&quot;); // login page
- * 	request.parameter.put(&quot;...&quot;, &quot;...&quot;);
- * 	Document response = request.call();
- * 	// now traverse through the dom tree and get your information.
- * }
- * catch (IOException e)
- * {
- * 	// your error handling.
- * }
- * </pre>
+ * HTTP-Client.
  * 
  * @author Jan Dankert
  */
 public class HttpClient
 {
+	/**
+	 * at the moment we are only supporting HTTP/1.0, because for HTTP/1.1 we
+	 * have to implement transfer chunked encoding, gzip-encoding, persistent
+	 * connections and much more. that is non-trivial. but HTTP/1.0 does the job
+	 * for us.
+	 */
 	private static final String HTTP_VERSION = "HTTP/1.0";
 
 	private PrintWriter logWriter;
@@ -75,16 +56,6 @@ public class HttpClient
 
 	private ParameterMap parameter = new ParameterMap();
 
-	/**
-	 * Constructs a CMS-Request to the specified server/path/port.
-	 * 
-	 * @param host
-	 *            hostname
-	 * @param path
-	 *            path
-	 * @param port
-	 *            port-number
-	 */
 	public HttpClient(CMSConnection connection)
 	{
 
@@ -94,8 +65,7 @@ public class HttpClient
 	}
 
 	/**
-	 * Sends a request to the openrat-server and parses the response into a DOM
-	 * tree document.
+	 * Sends a HTTP request to the server and parses the response.
 	 * 
 	 * @return server response as a DOM tree
 	 * @throws IOException
@@ -107,7 +77,6 @@ public class HttpClient
 
 		try
 		{
-
 			String httpUrl = this.connection.getServerPath();
 
 			final PrintWriter socketWriter = new PrintWriter(socket.getOutputStream(), true);
@@ -137,6 +106,7 @@ public class HttpClient
 
 			requestHeader.putAll(request.getRequestHeader());
 
+			// keep-alive is only for future use. for now we MUST close the connection after the call.
 			String connectionStatus = connection.isKeepAlive() ? "keep-alive" : "close";
 			requestHeader.put("Connection", connectionStatus);
 

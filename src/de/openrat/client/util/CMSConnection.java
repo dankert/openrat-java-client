@@ -439,7 +439,8 @@ public class CMSConnection
 	}
 
 	/**
-	 * Setzt das Feld <code>keepAlive</code>.
+	 * Using Keep-alive-sockets and HTTP-persistent-connections. we do NOT
+	 * support this! DO NOT set this to true!
 	 * 
 	 * @param keepAlive
 	 *            keepAlive
