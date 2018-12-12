@@ -154,7 +154,7 @@ public class CMSRequest
 		}
 		catch (SAXException e)
 		{
-			throw new CMSException("Server did not return a valid XML-document: " + httpResponse.getPayload(), ""
+			throw new CMSServerErrorException("Server did not return a valid XML-document: " + httpResponse.getPayload(), ""
 					+ httpResponse.getHttpStatus().getStatusCode(), httpResponse.getHttpStatus().getServerMessage(), e.getMessage(), e);
 		}
 
@@ -191,12 +191,12 @@ public class CMSRequest
 				String description = rootNode.getChild("description").getValue();
 				String reason = rootNode.getChild("reason").getValue();
 
-				throw new CMSException(error, status, description, reason);
+				throw new CMSServerErrorException(error, status, description, reason);
 
 			}
 			else
 			{
-				throw new CMSException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "");
+				throw new CMSServerErrorException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "");
 			}
 
 		}
@@ -214,13 +214,13 @@ public class CMSRequest
 			else
 			{
 				// HTTP-Status 200 OK, but no XML-Element "server" found.
-				throw new CMSException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "no SERVER element found");
+				throw new CMSServerErrorException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "no SERVER element found");
 			}
 		}
 		else
 		{
 			// Unknown HTTP Status
-			throw new CMSException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "Unsupported HTTP Status");
+			throw new CMSServerErrorException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "Unsupported HTTP Status");
 		}
 	}
 
@@ -236,7 +236,7 @@ public class CMSRequest
 		{
 			// oh no, the server api is older or newer than our client api.
 			// there is nothing we can do.
-			throw new CMSException("Only API Version " + CMSClient.SUPPORTED_API_VERSION +
+			throw new CMSServerErrorException("Only API Version " + CMSClient.SUPPORTED_API_VERSION +
 					" is supported. The server is using API Version " + apiVersion);
 		}
 

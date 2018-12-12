@@ -264,7 +264,7 @@ public class CMSClient
 			Constructor<T> c = actionClass.getConstructor(CMSConnection.class);
 			return c.newInstance( this.connection );
 		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-			throw new RuntimeException("The action '" + actionClass.getSimpleName() + " could not be created: " + e.getMessage(), e);
+			throw new IllegalArgumentException("The action '" + actionClass.getSimpleName() + " could not be created: " + e.getMessage(), e);
 		}
 	}
 }

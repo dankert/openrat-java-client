@@ -165,7 +165,7 @@ public class HttpClient
 
 			if (readLine == null)
 			{
-				throw new CMSException("Server response is empty");
+				throw new CMSServerErrorException("Server response is empty");
 			}
 
 			final String httpServerResponse = readLine.trim();
@@ -174,7 +174,6 @@ public class HttpClient
 
 			if (this.logWriter != null)
 			{
-
 				logWriter.println("--- HTTP-Response ---");
 				logWriter.println(httpServerResponse);
 			}
@@ -197,7 +196,7 @@ public class HttpClient
 				}
 				else
 				{
-					throw new CMSException("Unknown HTTP response header:" + responseHeaderString);
+					throw new CMSServerErrorException("Unknown HTTP response header:" + responseHeaderString);
 				}
 
 			}
