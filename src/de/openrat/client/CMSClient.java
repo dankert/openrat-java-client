@@ -209,7 +209,7 @@ public class CMSClient
 
 	/**
 	 * closing all resources. Normally, you do not need to call this, because
-	 * the sockets are closed after each call. this is only for future vesions
+	 * the sockets are closed after each call. this is only for future versions
 	 * wenn keep-alive is implemented.
 	 * 
 	 */

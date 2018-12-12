@@ -79,6 +79,9 @@ public class HttpClient
 		{
 			String httpUrl = this.connection.getServerPath();
 
+			// Do NOT use the UI, always use the API.
+			httpUrl = addTrailingSlash(httpUrl) + "api/";
+
 			final PrintWriter socketWriter = new PrintWriter(socket.getOutputStream(), true);
 
 			if (connection.getProxyHostname() != null)
@@ -245,6 +248,13 @@ public class HttpClient
 					; // we have done our very best to close the socket
 				}
 		}
+	}
+
+	private String addTrailingSlash(String httpUrl) {
+		if (httpUrl.endsWith("/"))
+			return httpUrl;
+		else
+			return httpUrl + "/";
 	}
 
 	public Socket createSocket() throws IOException
