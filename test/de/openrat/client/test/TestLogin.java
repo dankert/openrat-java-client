@@ -1,43 +1,37 @@
 package de.openrat.client.test;
 
-import static org.junit.Assert.fail;
-
-import java.io.PrintWriter;
-import java.util.Locale;
+import de.openrat.client.CMSClient;
+import de.openrat.client.action.LoginAction;
+import org.junit.Test;
 
 import javax.security.auth.login.LoginException;
 
-import org.junit.Test;
+import static de.openrat.client.test.TestConfiguration.*;
+import static org.junit.Assert.fail;
 
-import de.openrat.client.CMSClient;
-import de.openrat.client.action.LoginAction;
+public class TestLogin {
 
-public class TestLogin
-{
+    /**
+     * simple example for using the client.
+     */
+    @Test
+    public void test() {
+        final CMSClient client = new CMSClient(TestConfiguration.HOST, PATH, PORT);
+        client.setLogWriter(WRITER);
+        client.setProxy(PROXY_HOST, PROXY_PORT);
+        client.setLocale(LOCALE);
+        client.setKeepAlive(false);
+        client.setTimeout(15000);
 
-	/**
-	 * simple example for using the client.
-	 */
-	@Test
-	public void test()
-	{
+        LoginAction loginAction = client.createAction(LoginAction.class);
 
-		CMSClient client = new CMSClient("demo.openrat.de", "/latest-snapshot/openrat/dispatcher.php", 80);
-		client.setLogWriter(new PrintWriter(System.out, true));
-//		client.setProxy("proxy.mycompany.exmaple", 8080, "user", "pass");
-		client.setLocale(Locale.GERMAN);
-		client.setKeepAlive(false);
-		client.setTimeout(15000);
-		LoginAction loginAction = client.getLoginAction();
+        try {
+            loginAction.login(USER, PASS, DB);
+        } catch (LoginException e) {
+            fail("Login failed" + e.getLocalizedMessage());
+        }
 
-		try
-		{
-			loginAction.login("admin", "admin", "db1");
-		}
-		catch (LoginException e)
-		{
-			fail("Login failed" + e.getLocalizedMessage());
-		}
-	}
+        client.close();
+    }
 
 }

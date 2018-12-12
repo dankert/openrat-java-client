@@ -1,7 +1,5 @@
 package de.openrat.client.action;
 
-import java.io.IOException;
-
 import de.openrat.client.util.CMSConnection;
 import de.openrat.client.util.CMSException;
 import de.openrat.client.util.CMSRequest;
@@ -20,21 +18,18 @@ public abstract class Action
 	private Id id;
 
 	private CMSConnection connection;
-	private String action;
 
 	/**
 	 * Clear parameter values.
 	 */
 	public void clear()
 	{
-
 		parameter.clear();
 	}
 
-	protected Action(CMSConnection connection, String action)
+	protected Action(CMSConnection connection)
 	{
 		this.connection = connection;
-		this.action = action;
 	}
 
 	/**
@@ -79,7 +74,15 @@ public abstract class Action
 		return connection;
 	}
 
-	protected CMSResponse execute(String method, HttpMethod httpMethod) throws CMSException
+	protected CMSResponse executeView(String action, String method) {
+		return execute(action,method,HttpMethod.GET);
+	}
+
+	protected CMSResponse executePost(String action, String method) {
+		return execute(action,method,HttpMethod.POST);
+	}
+
+	private CMSResponse execute(String action, String method, HttpMethod httpMethod) throws CMSException
 	{
 
 		final ParameterMap parameter = new ParameterMap();

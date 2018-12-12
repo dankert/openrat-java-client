@@ -22,8 +22,12 @@ package de.openrat.client;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
+import de.openrat.client.action.Action;
+import de.openrat.client.action.CMSAction;
 import de.openrat.client.action.LoginAction;
 import de.openrat.client.util.CMSConnection;
 
@@ -55,10 +59,15 @@ import de.openrat.client.util.CMSConnection;
  */
 public class CMSClient
 {
-	// the api version which we are supporting
+	/**
+	 * the api version which we are supporting.
+	 */
 	public final static int SUPPORTED_API_VERSION = 2;
 
-	final CMSConnection connection;
+	/**
+	 * The internal connection-object to the cms.
+	 */
+	private final CMSConnection connection;
 
 	/**
 	 * Constructs a CMS-Connection to the specified server.<br>
@@ -103,16 +112,6 @@ public class CMSClient
 	{
 
 		this.connection = new CMSConnection(host, port, path);
-	}
-
-	/**
-	 * Action class for login methods.
-	 * 
-	 * @return
-	 */
-	public LoginAction getLoginAction()
-	{
-		return new LoginAction(connection);
 	}
 
 	/**
@@ -241,4 +240,31 @@ public class CMSClient
 		super.finalize();
 	}
 
+
+
+	/**
+	 * Creates a more low-level common action.
+	 *
+	 * @return new action instance
+	 */
+	public CMSAction createAction() {
+		return createAction( CMSAction.class );
+	}
+
+
+	/**
+	 * Creates a custom action.
+	 *
+	 * @param actionClass the action class to instantiate
+	 * @param <T>
+	 * @return new action instance
+	 */
+	public <T extends Action> T createAction(Class<T> actionClass) {
+		try {
+			Constructor<T> c = actionClass.getConstructor(CMSConnection.class);
+			return c.newInstance( this.connection );
+		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+			throw new RuntimeException("The action '" + actionClass.getSimpleName() + " could not be created: " + e.getMessage(), e);
+		}
+	}
 }

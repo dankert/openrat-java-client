@@ -15,10 +15,10 @@ import de.openrat.client.util.HttpRequest.HttpMethod;
  */
 public class LoginAction extends Action
 {
-
+	private final static String ACTION = "login";
 	public LoginAction(CMSConnection connection)
 	{
-		super(connection, "login");
+		super(connection);
 	}
 
 	/**
@@ -37,7 +37,7 @@ public class LoginAction extends Action
 	public User login(String username, String password, String databaseId) throws LoginException
 	{
 
-		execute("login", HttpMethod.GET);
+		executeView(ACTION, "login");
 
 		clear();
 		setParameter("login_name", username);
@@ -45,7 +45,7 @@ public class LoginAction extends Action
 		setParameter("dbid", databaseId);
 		try
 		{
-			CMSResponse response = execute("login", HttpMethod.POST);
+			CMSResponse response = executePost(ACTION, "login");
 
 			User user = new User();
 			return user;
@@ -64,7 +64,6 @@ public class LoginAction extends Action
 
 	public void logout()
 	{
-
-		execute("logout", HttpMethod.POST);
+		executePost(ACTION, "logout");
 	}
 }

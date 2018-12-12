@@ -99,7 +99,7 @@ public class CMSResponse
 	}
 
 	/**
-	 * Inhalt des Feldes <code>api</code>.
+	 * the API version.
 	 * 
 	 * @return api
 	 */

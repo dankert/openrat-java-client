@@ -100,12 +100,7 @@ public class CMSRequest
 	/**
 	 * Constructs a CMS-Request to the specified server/path/port.
 	 * 
-	 * @param host
-	 *            hostname
-	 * @param path
-	 *            path
-	 * @param port
-	 *            port-number
+	 * @param connection Connection to server
 	 */
 	public CMSRequest(CMSConnection connection)
 	{
@@ -212,7 +207,6 @@ public class CMSRequest
 			if (rootNode.getName() == "server")
 			{
 				// Server reports an answer
-
 				CMSResponse cmsResponse = createCMSReponse(rootNode);
 
 				return cmsResponse;
@@ -240,10 +234,10 @@ public class CMSRequest
 
 		if (apiVersion != CMSClient.SUPPORTED_API_VERSION)
 		{
-			// oh no, the server api is older or newer than our client
-			// api.
+			// oh no, the server api is older or newer than our client api.
 			// there is nothing we can do.
-			throw new CMSException("Only API Version 2 is supported. The server is using API Version " + rootNode.getChild("api"));
+			throw new CMSException("Only API Version " + CMSClient.SUPPORTED_API_VERSION +
+					" is supported. The server is using API Version " + apiVersion);
 		}
 
 		cmsResponse.setApi(apiVersion);
@@ -267,10 +261,13 @@ public class CMSRequest
 			error.setText(noticeNode.getChild("text").getValue());
 
 			String status = noticeNode.getChild("status").getValue();
+
 			if (status.equalsIgnoreCase("ok"))
 				error.setStatus(CMSErrorStatus.NOTICE);
 			else if (status.equalsIgnoreCase("warning"))
 				error.setStatus(CMSErrorStatus.WARN);
+			else if (status.equalsIgnoreCase("info"))
+				error.setStatus(CMSErrorStatus.INFO);
 			else
 				error.setStatus(CMSErrorStatus.ERROR);
 			noticeList.add(error);

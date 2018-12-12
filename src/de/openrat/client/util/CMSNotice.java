@@ -5,7 +5,7 @@ public class CMSNotice
 
 	public static enum CMSErrorStatus
 	{
-		NOTICE, WARN, ERROR;
+		NOTICE, WARN, ERROR, INFO;
 	}
 
 	private CMSErrorStatus status;

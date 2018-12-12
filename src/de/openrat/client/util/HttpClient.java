@@ -250,11 +250,17 @@ public class HttpClient
 		}
 	}
 
-	private String addTrailingSlash(String httpUrl) {
-		if (httpUrl.endsWith("/"))
-			return httpUrl;
+	/**
+	 * Add trailing slash (if it does not exist).
+	 *
+	 * @param path
+	 * @return
+	 */
+	private String addTrailingSlash(String path) {
+		if (path.endsWith("/"))
+			return path;
 		else
-			return httpUrl + "/";
+			return path + "/";
 	}
 
 	public Socket createSocket() throws IOException

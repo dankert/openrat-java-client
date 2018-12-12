@@ -3,7 +3,6 @@ package de.openrat.client.action;
 import de.openrat.client.dto.Project;
 import de.openrat.client.util.CMSConnection;
 import de.openrat.client.util.CMSResponse;
-import de.openrat.client.util.HttpRequest.HttpMethod;
 import de.openrat.client.util.Id;
 
 /**
@@ -13,16 +12,17 @@ import de.openrat.client.util.Id;
  */
 public class ProjectAction extends Action
 {
+	private final static String PROJECT = "project";
 
-	public ProjectAction(CMSConnection request)
+	public ProjectAction(CMSConnection connection)
 	{
-		super(request, "project");
+		super(connection);
 	}
 
 	public Project getInfo(Id id)
 	{
 
-		CMSResponse response = execute("info", HttpMethod.GET);
+		CMSResponse response = executeView(PROJECT, "info");
 		// TODO
 
 		return new Project();
