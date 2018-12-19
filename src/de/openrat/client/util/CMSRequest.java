@@ -54,7 +54,7 @@ import de.openrat.client.util.HttpRequest.HttpMethod;
  * calling the CMS a DOM-document is returned, which contains the server
  * response.<br>
  * Example <br>
- * 
+ *
  * <pre>
  * CMSRequest request = new CMSRequest(&quot;your.openrat.example.com&quot;);
  * // prints tracing information to stdout.
@@ -72,7 +72,7 @@ import de.openrat.client.util.HttpRequest.HttpMethod;
  * 	// your error handling.
  * }
  * </pre>
- * 
+ *
  * @author Jan Dankert
  */
 public class CMSRequest
@@ -88,7 +88,7 @@ public class CMSRequest
 
 	/**
 	 * Set the HTTP Method. Default is "GET".
-	 * 
+	 *
 	 * @param method
 	 *            HTTP-method
 	 */
@@ -100,7 +100,7 @@ public class CMSRequest
 
 	/**
 	 * Constructs a CMS-Request to the specified server/path/port.
-	 * 
+	 *
 	 * @param connection Connection to server
 	 */
 	public CMSRequest(CMSConnection connection)
@@ -114,7 +114,7 @@ public class CMSRequest
 	/**
 	 * Sends a request to the openrat-server and parses the response into a DOM
 	 * tree document.
-	 * 
+	 *
 	 * @return server response as a DOM tree
 	 * @throws IOException
 	 *             if server is unrechable or responds non-wellformed XML
@@ -168,9 +168,9 @@ public class CMSRequest
 
 	/**
 	 * Erzeugt aus
-	 * 
+	 *
 	 * @param httpStatus
-	 * 
+	 *
 	 * @param rootNode
 	 * @return
 	 */
@@ -194,16 +194,22 @@ public class CMSRequest
 
 				ServerSideException cause = null;
 
-				// TODO only when trace available
-				cause = new ServerSideException();
+				// TODO only if trace available
+				final List<StackTraceElement> trace = new ArrayList<>();
 				final String file = "modules/cms-core/Dispatcher.class.php";
 				final String filename = FileSystems.getDefault().getPath(file).getFileName().toString();
 				final String method = "cms\\Dispatcher->commitDatabaseTransaction()";
 				final int line = 110;
 
-				StackTraceElement[] trace = new StackTraceElement[] { new StackTraceElement(file,method,filename,line) } ;
+				trace.add( new StackTraceElement(file,method,filename,line) );
 
-				cause.setStackTrace( trace );
+                String name = "MyServerException";
+                String message = "server error";
+
+                cause = new ServerSideException(message,name);
+				cause.setStackTrace( trace.toArray(new StackTraceElement[]{}) );
+				// TODO recursive exceptions
+
 				throw new CMSServerErrorException(error, status, description, reason, cause);
 
 			}
