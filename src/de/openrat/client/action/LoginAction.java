@@ -6,6 +6,7 @@ import de.openrat.client.dto.User;
 import de.openrat.client.util.CMSConnection;
 import de.openrat.client.util.CMSException;
 import de.openrat.client.util.CMSResponse;
+import de.openrat.client.util.CMSServerErrorException;
 import de.openrat.client.util.HttpRequest.HttpMethod;
 
 /**
@@ -52,7 +53,7 @@ public class LoginAction extends Action
 		}
 		catch (CMSException e)
 		{
-			if ("LOGIN_FAILED".equals(e.getStatus()))
+			if (e instanceof CMSServerErrorException && ((CMSServerErrorException) e).getStatus().equals("LOGIN_FAILED"))
 				// wrong credentials - throw checked exception
 				throw new LoginException(e.getLocalizedMessage());
 			else

@@ -321,7 +321,7 @@ public class HttpClient
 		}
 		catch (ConnectException e)
 		{
-			throw new CMSException("cannot connect to " + socketAddress.toString(), "", "", e.getMessage(), e);
+			throw new CMSException("cannot connect to " + socketAddress.toString() + e.getMessage(), e);
 		}
 
 		if (connection.isKeepAlive())

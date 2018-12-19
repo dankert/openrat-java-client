@@ -23,6 +23,7 @@ package de.openrat.client.util;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -191,7 +192,19 @@ public class CMSRequest
 				String description = rootNode.getChild("description").getValue();
 				String reason = rootNode.getChild("reason").getValue();
 
-				throw new CMSServerErrorException(error, status, description, reason);
+				ServerSideException cause = null;
+
+				// TODO only when trace available
+				cause = new ServerSideException();
+				final String file = "modules/cms-core/Dispatcher.class.php";
+				final String filename = FileSystems.getDefault().getPath(file).getFileName().toString();
+				final String method = "cms\\Dispatcher->commitDatabaseTransaction()";
+				final int line = 110;
+
+				StackTraceElement[] trace = new StackTraceElement[] { new StackTraceElement(file,method,filename,line) } ;
+
+				cause.setStackTrace( trace );
+				throw new CMSServerErrorException(error, status, description, reason, cause);
 
 			}
 			else
