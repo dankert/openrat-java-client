@@ -150,7 +150,7 @@ public class CMSRequest
 			{
 				e.printStackTrace(logWriter);
 			}
-			throw new CMSException("XML-Parser-Configuration invalid", "", "", e.getMessage(), e);
+			throw new CMSException("XML-Parser-Configuration invalid: "+e.getMessage(), e);
 		}
 		catch (SAXException e)
 		{
@@ -183,7 +183,7 @@ public class CMSRequest
 
 		if (httpStatus.isServerError())
 		{
-			if (rootNode.getName() == "error")
+			if (rootNode.getName().equals("server") || rootNode.getName().equals("error") )
 			{
 				// Server reports an technical error.
 				String error = rootNode.getChild("error").getValue();
