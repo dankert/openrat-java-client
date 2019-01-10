@@ -23,13 +23,7 @@ package de.openrat.client.util;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.nio.file.FileSystems;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -187,28 +181,15 @@ public class CMSRequest
 			if (rootNode.getName().equals("server") || rootNode.getName().equals("error") )
 			{
 				// Server reports an technical error.
-				String error = rootNode.getChild("error").getValue();
-				String status = rootNode.getChild("status").getValue();
-				String description = rootNode.getChild("description").getValue();
-				String reason = rootNode.getChild("reason").getValue();
+				String error = rootNode.getFirstChildByName("error").getValue();
+				String status = rootNode.getFirstChildByName("status").getValue();
+				String description = rootNode.getFirstChildByName("description").getValue();
+				String reason = rootNode.getFirstChildByName("reason").getValue();
 
 				ServerSideException cause = null;
 
-				// TODO only if trace available
-				final List<StackTraceElement> trace = new ArrayList<>();
-				final String file = "modules/cms-core/Dispatcher.class.php";
-				final String filename = FileSystems.getDefault().getPath(file).getFileName().toString();
-				final String method = "cms\\Dispatcher->commitDatabaseTransaction()";
-				final int line = 110;
-
-				trace.add( new StackTraceElement(file,method,filename,line) );
-
-                String name = "MyServerException";
-                String message = "server error";
-
-                cause = new ServerSideException(message,name);
-				cause.setStackTrace( trace.toArray(new StackTraceElement[]{}) );
-				// TODO recursive exceptions
+				if   ( rootNode.getFirstChildByName("trace") != null )
+					cause = createExceptionFromServerTrace( rootNode.getFirstChildByName("trace"));
 
 				throw new CMSServerErrorException(error, status, description, reason, cause);
 
@@ -243,13 +224,41 @@ public class CMSRequest
 		}
 	}
 
+	private ServerSideException createExceptionFromServerTrace(CMSNode trace) {
+
+		final List<StackTraceElement> traceElements = new ArrayList<>();
+
+		for( CMSNode traceElementNode : trace.getChildren() ) {
+
+			String file = traceElementNode.getFirstChildValue("file");
+			String line = traceElementNode.getFirstChildValue("line");
+
+			int lineNumber = 0;
+			if ( line != null)
+				lineNumber  = Integer.parseInt(line);
+
+			String fct = traceElementNode.getFirstChildValue("function");
+			String cls = traceElementNode.getFirstChildValue("class");
+			if(cls == null) cls = "";
+			traceElements.add( new StackTraceElement(cls, fct,file,lineNumber) );
+		}
+
+		String name = "Exception";
+		String message = "server error";
+		ServerSideException cause = new ServerSideException(message,name);
+
+		cause.setStackTrace( traceElements.toArray( new StackTraceElement[]{}) );
+
+		return cause;
+	}
+
 	private CMSResponse createCMSReponse(final CMSNode rootNode)
 	{
 
 		CMSResponse cmsResponse = new CMSResponse();
 
 		// Do we support the server api version?
-		int apiVersion = Integer.parseInt(rootNode.getChild("api").getValue());
+		int apiVersion = Integer.parseInt(rootNode.getFirstChildByName("api").getValue());
 
 		if (apiVersion != CMSClient.SUPPORTED_API_VERSION)
 		{
@@ -260,10 +269,10 @@ public class CMSRequest
 		}
 
 		cmsResponse.setApi(apiVersion);
-		cmsResponse.setVersion(rootNode.getChild("version").getValue());
+		cmsResponse.setVersion(rootNode.getFirstChildByName("version").getValue());
 
 		List<String> errorList = new ArrayList<String>();
-		for (CMSNode errorNode : rootNode.getChild("errors").getChildren())
+		for (CMSNode errorNode : rootNode.getFirstChildByName("errors").getChildren())
 		{
 			errorList.add(errorNode.getValue());
 		}
@@ -271,15 +280,15 @@ public class CMSRequest
 
 		List<CMSNotice> noticeList = new ArrayList<CMSNotice>();
 
-		for (CMSNode noticeNode : rootNode.getChild("notices").getChildren())
+		for (CMSNode noticeNode : rootNode.getFirstChildByName("notices").getChildren())
 		{
 			CMSNotice error = new CMSNotice();
-			error.setKey(noticeNode.getChild("key").getValue());
-			error.setType(noticeNode.getChild("type").getValue());
-			error.setName(noticeNode.getChild("name").getValue());
-			error.setText(noticeNode.getChild("text").getValue());
+			error.setKey(noticeNode.getFirstChildByName("key").getValue());
+			error.setType(noticeNode.getFirstChildByName("type").getValue());
+			error.setName(noticeNode.getFirstChildByName("name").getValue());
+			error.setText(noticeNode.getFirstChildByName("text").getValue());
 
-			String status = noticeNode.getChild("status").getValue();
+			String status = noticeNode.getFirstChildByName("status").getValue();
 
 			if (status.equalsIgnoreCase("ok"))
 				error.setStatus(CMSErrorStatus.NOTICE);
@@ -293,14 +302,14 @@ public class CMSRequest
 		}
 		cmsResponse.setNotices(noticeList);
 
-		CMSNode sessionNode = rootNode.getChild("session");
+		CMSNode sessionNode = rootNode.getFirstChildByName("session");
 		CMSSession session = new CMSSession();
-		session.setName(sessionNode.getChild("name").getValue());
-		session.setId(sessionNode.getChild("id").getValue());
-		session.setToken(sessionNode.getChild("token").getValue());
+		session.setName(sessionNode.getFirstChildByName("name").getValue());
+		session.setId(sessionNode.getFirstChildByName("id").getValue());
+		session.setToken(sessionNode.getFirstChildByName("token").getValue());
 		cmsResponse.setSession(session);
 
-		cmsResponse.setOutput(rootNode.getChild("outpout"));
+		cmsResponse.setOutput(rootNode.getFirstChildByName("outpout"));
 		return cmsResponse;
 	}
 
@@ -352,7 +361,7 @@ public class CMSRequest
 	private static CMSNode convertXMLNodeIntoCMSNode(Node node)
 	{
 
-		Map<String, CMSNode> children = new HashMap<String, CMSNode>();
+		List<CMSNode> children = new ArrayList<CMSNode>();
 
 		for (Node nodex : iterable(node.getChildNodes()))
 		{
@@ -360,7 +369,7 @@ public class CMSRequest
 			{
 
 				CMSNode childNode = convertXMLNodeIntoCMSNode(nodex);
-				children.put(nodex.getNodeName(), childNode);
+				children.add(childNode);
 			}
 		}
 

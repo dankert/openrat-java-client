@@ -20,6 +20,7 @@ public class ServerSideException extends Exception {
 
 
     public String toString() {
+        // if name is set, use it and not the class name.
         String s = (name != null) ? name : getClass().getName();
 
         String message = getLocalizedMessage();
