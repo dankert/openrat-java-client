@@ -38,6 +38,7 @@ public class LoginAction extends Action
 	public User login(String username, String password, String databaseId) throws LoginException
 	{
 
+		setParameter("dbid", databaseId);
 		executeView(ACTION, "login");
 
 		clear();
