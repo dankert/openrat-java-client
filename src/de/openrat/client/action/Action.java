@@ -8,6 +8,11 @@ import de.openrat.client.util.HttpRequest.HttpMethod;
 import de.openrat.client.util.Id;
 import de.openrat.client.util.ParameterMap;
 
+/**
+ * Action.
+ *
+ * This class is NOT threadsafe and should be used by one thread simultaneously.
+ */
 public abstract class Action
 {
 
