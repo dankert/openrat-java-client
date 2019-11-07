@@ -29,6 +29,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import de.openrat.client.Version;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -258,9 +259,9 @@ public class CMSRequest
 		CMSResponse cmsResponse = new CMSResponse();
 
 		// Do we support the server api version?
-		int apiVersion = Integer.parseInt(rootNode.getFirstChildByName("api").getValue());
+		Version apiVersion = new Version( rootNode.getFirstChildByName("api").getValue());
 
-		if (apiVersion != CMSClient.SUPPORTED_API_VERSION)
+		if (! apiVersion.equals( CMSClient.SUPPORTED_API_VERSION ))
 		{
 			// oh no, the server api is older or newer than our client api.
 			// there is nothing we can do.
@@ -269,7 +270,7 @@ public class CMSRequest
 		}
 
 		cmsResponse.setApi(apiVersion);
-		cmsResponse.setVersion(rootNode.getFirstChildByName("version").getValue());
+		cmsResponse.setVersion( new Version(rootNode.getFirstChildByName("version").getValue()));
 
 		List<String> errorList = new ArrayList<String>();
 		for (CMSNode errorNode : rootNode.getFirstChildByName("errors").getChildren())

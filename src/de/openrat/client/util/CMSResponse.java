@@ -20,6 +20,8 @@ Boston, MA  02110-1301, USA.
  */
 package de.openrat.client.util;
 
+import de.openrat.client.Version;
+
 import java.util.List;
 
 
@@ -35,8 +37,8 @@ public class CMSResponse
 	private CMSSession session;
 	private int httpStatus;
 
-	private int api;
-	private String version;
+	private Version api;
+	private Version version;
 
 	/**
 	 * Inhalt des Feldes <code>error</code>.
@@ -103,18 +105,18 @@ public class CMSResponse
 	 * 
 	 * @return api
 	 */
-	public int getApi()
+	public Version getApi()
 	{
 		return api;
 	}
 
 	/**
 	 * Setzt das Feld <code>api</code>.
-	 * 
+	 *
 	 * @param api
 	 *            api
 	 */
-	public void setApi(int api)
+	public void setApi(Version api)
 	{
 		this.api = api;
 	}
@@ -124,18 +126,18 @@ public class CMSResponse
 	 * 
 	 * @return version
 	 */
-	public String getVersion()
+	public Version getVersion()
 	{
 		return version;
 	}
 
 	/**
 	 * Setzt das Feld <code>version</code>.
-	 * 
+	 *
 	 * @param version
 	 *            version
 	 */
-	public void setVersion(String version)
+	public void setVersion(Version version)
 	{
 		this.version = version;
 	}

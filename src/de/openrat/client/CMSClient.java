@@ -62,7 +62,7 @@ public class CMSClient
 	/**
 	 * the api version which we are supporting.
 	 */
-	public final static int SUPPORTED_API_VERSION = 2;
+	public final static Version SUPPORTED_API_VERSION = new Version("2");
 
 	/**
 	 * The internal connection-object to the cms.
