@@ -70,9 +70,10 @@ import de.openrat.client.util.HttpRequest.HttpMethod;
  *
  * @author Jan Dankert
  */
-public class CMSRequest
-{
+public class CMSRequest {
 
+	private String actionMethod;
+	private String action;
 	private ParameterMap parameter = new ParameterMap();
 
 	private PrintWriter logWriter;
@@ -82,15 +83,18 @@ public class CMSRequest
 	private CMSConnection connection;
 
 	/**
-	 * Set the HTTP Method. Default is "GET".
-	 *
-	 * @param method
-	 *            HTTP-method
+	 * Marks this request for writing.
 	 */
-	public void setMethod(HttpMethod method)
-	{
+	public CMSRequest forWriting() {
+		this.method = HttpMethod.POST;
+		return this;
+	}
 
-		this.method = method;
+	/**
+	 */
+	public CMSRequest forReading() {
+		this.method = HttpMethod.GET;
+		return this;
 	}
 
 	/**
@@ -98,25 +102,42 @@ public class CMSRequest
 	 *
 	 * @param connection Connection to server
 	 */
-	public CMSRequest(CMSConnection connection)
-	{
-
+	public CMSRequest(CMSConnection connection) {
 		super();
 		this.connection = connection;
 		this.logWriter = connection.getLogWriter();
 	}
+
+
+	public CMSRequest(CMSConnection connection, String action, String method) {
+		this(connection);
+		this.action = action;
+		this.actionMethod = method;
+	}
+
+
+	public CMSRequest addParameter(String name, CharSequence value) {
+		this.parameter.put(name, value.toString());
+		return this;
+	}
+
+	public CMSRequest addParameter(String name, long value) {
+		this.parameter.put(name, Long.toString(value));
+		return this;
+	}
+
 
 	/**
 	 * Sends a request to the openrat-server and parses the response into a DOM
 	 * tree document.
 	 *
 	 * @return server response as a DOM tree
-	 * @throws IOException
-	 *             if server is unrechable or responds non-wellformed XML
+	 * @throws IOException if server is unrechable or responds non-wellformed XML
 	 */
-	public CMSResponse execute() throws IOException
-	{
+	public CMSResponse execute() throws IOException {
 
+		parameter.put("action",this.action);
+		parameter.put("subaction",this.actionMethod);
 		parameter.put("token", connection.getToken());
 
 		HttpRequest httpRequest = new HttpRequest();
@@ -132,24 +153,18 @@ public class CMSRequest
 		HttpResponse httpResponse = httpClient.execute(httpRequest);
 
 		final CMSNode rootNode;
-		try
-		{
+		try {
 			// Try XML parsing
 			final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			final DocumentBuilder builder = factory.newDocumentBuilder();
 			final Document document = builder.parse(new InputSource(new StringReader(httpResponse.getPayload())));
 			rootNode = convertXMLNodeIntoCMSNode(document.getDocumentElement());
-		}
-		catch (ParserConfigurationException e)
-		{
-			if (logWriter != null)
-			{
+		} catch (ParserConfigurationException e) {
+			if (logWriter != null) {
 				e.printStackTrace(logWriter);
 			}
-			throw new CMSException("XML-Parser-Configuration invalid: "+e.getMessage(), e);
-		}
-		catch (SAXException e)
-		{
+			throw new CMSException("XML-Parser-Configuration invalid: " + e.getMessage(), e);
+		} catch (SAXException e) {
 			throw new CMSServerErrorException("Server did not return a valid XML-document: " + httpResponse.getPayload(), ""
 					+ httpResponse.getHttpStatus().getStatusCode(), httpResponse.getHttpStatus().getServerMessage(), e.getMessage(), e);
 		}
@@ -165,22 +180,17 @@ public class CMSRequest
 	 * Erzeugt aus
 	 *
 	 * @param httpStatus
-	 *
 	 * @param rootNode
 	 * @return
 	 */
-	private CMSResponse createCMSResponse(HttpStatus httpStatus, final CMSNode rootNode)
-	{
+	private CMSResponse createCMSResponse(HttpStatus httpStatus, final CMSNode rootNode) {
 
-		if (httpStatus.getStatusCode() == 204)
-		{
+		if (httpStatus.getStatusCode() == 204) {
 			return null; // No content
 		}
 
-		if (httpStatus.isServerError())
-		{
-			if (rootNode.getName().equals("server") || rootNode.getName().equals("error") )
-			{
+		if (httpStatus.isServerError()) {
+			if (rootNode.getName().equals("server") || rootNode.getName().equals("error")) {
 				// Server reports an technical error.
 				String error = rootNode.getFirstChildByName("error").getValue();
 				String status = rootNode.getFirstChildByName("status").getValue();
@@ -189,37 +199,29 @@ public class CMSRequest
 
 				ServerSideException cause = null;
 
-				if   ( rootNode.getFirstChildByName("trace") != null )
-					cause = createExceptionFromServerTrace( rootNode.getFirstChildByName("trace"));
+				if (rootNode.getFirstChildByName("trace") != null)
+					cause = createExceptionFromServerTrace(rootNode.getFirstChildByName("trace"));
 
 				throw new CMSServerErrorException(error, status, description, reason, cause);
 
-			}
-			else
-			{
+			} else {
 				throw new CMSServerErrorException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "");
 			}
 
 		}
 
-		if (httpStatus.getStatusCode() == 200)
-		{
+		if (httpStatus.getStatusCode() == 200) {
 
-			if (rootNode.getName() == "server")
-			{
+			if (rootNode.getName() == "server") {
 				// Server reports an answer
 				CMSResponse cmsResponse = createCMSReponse(rootNode);
 
 				return cmsResponse;
-			}
-			else
-			{
+			} else {
 				// HTTP-Status 200 OK, but no XML-Element "server" found.
 				throw new CMSServerErrorException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "no SERVER element found");
 			}
-		}
-		else
-		{
+		} else {
 			// Unknown HTTP Status
 			throw new CMSServerErrorException(httpStatus.getServerMessage(), "" + httpStatus.getStatusCode(), "", "Unsupported HTTP Status");
 		}
@@ -229,40 +231,38 @@ public class CMSRequest
 
 		final List<StackTraceElement> traceElements = new ArrayList<>();
 
-		for( CMSNode traceElementNode : trace.getChildren() ) {
+		for (CMSNode traceElementNode : trace.getChildren()) {
 
 			String file = traceElementNode.getFirstChildValue("file");
 			String line = traceElementNode.getFirstChildValue("line");
 
 			int lineNumber = 0;
-			if ( line != null)
-				lineNumber  = Integer.parseInt(line);
+			if (line != null)
+				lineNumber = Integer.parseInt(line);
 
 			String fct = traceElementNode.getFirstChildValue("function");
 			String cls = traceElementNode.getFirstChildValue("class");
-			if(cls == null) cls = "";
-			traceElements.add( new StackTraceElement(cls, fct,file,lineNumber) );
+			if (cls == null) cls = "";
+			traceElements.add(new StackTraceElement(cls, fct, file, lineNumber));
 		}
 
 		String name = "Exception";
 		String message = "server error";
-		ServerSideException cause = new ServerSideException(message,name);
+		ServerSideException cause = new ServerSideException(message, name);
 
-		cause.setStackTrace( traceElements.toArray( new StackTraceElement[]{}) );
+		cause.setStackTrace(traceElements.toArray(new StackTraceElement[]{}));
 
 		return cause;
 	}
 
-	private CMSResponse createCMSReponse(final CMSNode rootNode)
-	{
+	private CMSResponse createCMSReponse(final CMSNode rootNode) {
 
 		CMSResponse cmsResponse = new CMSResponse();
 
 		// Do we support the server api version?
-		Version apiVersion = new Version( rootNode.getFirstChildByName("api").getValue());
+		Version apiVersion = new Version(rootNode.getFirstChildByName("api").getValue());
 
-		if (! apiVersion.equals( CMSClient.SUPPORTED_API_VERSION ))
-		{
+		if (!apiVersion.equals(CMSClient.SUPPORTED_API_VERSION)) {
 			// oh no, the server api is older or newer than our client api.
 			// there is nothing we can do.
 			throw new CMSServerErrorException("Only API Version " + CMSClient.SUPPORTED_API_VERSION +
@@ -270,19 +270,17 @@ public class CMSRequest
 		}
 
 		cmsResponse.setApi(apiVersion);
-		cmsResponse.setVersion( new Version(rootNode.getFirstChildByName("version").getValue()));
+		cmsResponse.setVersion(new Version(rootNode.getFirstChildByName("version").getValue()));
 
 		List<String> errorList = new ArrayList<String>();
-		for (CMSNode errorNode : rootNode.getFirstChildByName("errors").getChildren())
-		{
+		for (CMSNode errorNode : rootNode.getFirstChildByName("errors").getChildren()) {
 			errorList.add(errorNode.getValue());
 		}
 		cmsResponse.setValidationErrors(errorList);
 
 		List<CMSNotice> noticeList = new ArrayList<CMSNotice>();
 
-		for (CMSNode noticeNode : rootNode.getFirstChildByName("notices").getChildren())
-		{
+		for (CMSNode noticeNode : rootNode.getFirstChildByName("notices").getChildren()) {
 			CMSNotice error = new CMSNotice();
 			error.setKey(noticeNode.getFirstChildByName("key").getValue());
 			error.setType(noticeNode.getFirstChildByName("type").getValue());
@@ -310,48 +308,33 @@ public class CMSRequest
 		session.setToken(sessionNode.getFirstChildByName("token").getValue());
 		cmsResponse.setSession(session);
 
-		cmsResponse.setOutput(rootNode.getFirstChildByName("outpout"));
+		cmsResponse.setOutput(rootNode.getFirstChildByName("output"));
 		return cmsResponse;
 	}
 
-	public void setLogWriter(PrintWriter logWriter)
-	{
-		this.logWriter = logWriter;
-	}
+	public static Iterable<Node> iterable(final NodeList n) {
 
-	public static Iterable<Node> iterable(final NodeList n)
-	{
+		return new Iterable<Node>() {
 
-		return new Iterable<Node>()
-		{
+			public Iterator<Node> iterator() {
 
-			public Iterator<Node> iterator()
-			{
-
-				return new Iterator<Node>()
-				{
+				return new Iterator<Node>() {
 
 					int index = 0;
 
-					public boolean hasNext()
-					{
+					public boolean hasNext() {
 						return index < n.getLength();
 					}
 
-					public Node next()
-					{
-						if (hasNext())
-						{
+					public Node next() {
+						if (hasNext()) {
 							return n.item(index++);
-						}
-						else
-						{
+						} else {
 							throw new NoSuchElementException();
 						}
 					}
 
-					public void remove()
-					{
+					public void remove() {
 						throw new UnsupportedOperationException();
 					}
 				};
@@ -359,15 +342,12 @@ public class CMSRequest
 		};
 	}
 
-	private static CMSNode convertXMLNodeIntoCMSNode(Node node)
-	{
+	private static CMSNode convertXMLNodeIntoCMSNode(Node node) {
 
 		List<CMSNode> children = new ArrayList<CMSNode>();
 
-		for (Node nodex : iterable(node.getChildNodes()))
-		{
-			if (nodex.getNodeType() == Node.ELEMENT_NODE)
-			{
+		for (Node nodex : iterable(node.getChildNodes())) {
+			if (nodex.getNodeType() == Node.ELEMENT_NODE) {
 
 				CMSNode childNode = convertXMLNodeIntoCMSNode(nodex);
 				children.add(childNode);
@@ -375,10 +355,5 @@ public class CMSRequest
 		}
 
 		return new CMSNode(node.getNodeName(), node.getTextContent(), children);
-	}
-
-	public ParameterMap getParameter()
-	{
-		return parameter;
 	}
 }

@@ -1,5 +1,10 @@
 package de.openrat.client;
 
+/**
+ * Checking and comparing versions.
+ *
+ * @source https://stackoverflow.com/questions/198431/how-do-you-compare-two-version-strings-in-java
+ */
 public class Version implements Comparable<Version> {
 
 	private String version;

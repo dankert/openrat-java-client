@@ -1,21 +1,18 @@
 package de.openrat.client.test;
 
 import de.openrat.client.CMSClient;
-import de.openrat.client.action.LoginAction;
 import org.junit.Test;
 
-import javax.security.auth.login.LoginException;
-
 import static de.openrat.client.test.TestConfiguration.*;
-import static org.junit.Assert.fail;
 
-public class TestLogin {
+public class LoginAndInfoTest {
 
     /**
      * simple example for using the client.
      */
     @Test
-    public void test() {
+    public void testUserInfo() throws Exception {
+
         final CMSClient client = new CMSClient(TestConfiguration.HOST, PATH, PORT);
         client.setLogWriter(WRITER);
         client.setProxy(PROXY_HOST, PROXY_PORT);
@@ -23,15 +20,15 @@ public class TestLogin {
         client.setKeepAlive(false);
         client.setTimeout(15000);
 
-        LoginAction loginAction = client.createAction(LoginAction.class);
+		ExampleCMSTestAPI api = new ExampleCMSTestAPI(client);
 
-        try {
-            loginAction.login(USER, PASS, DB);
-        } catch (LoginException e) {
-            fail("Login failed" + e.getLocalizedMessage());
-        }
+		// let's login
+		api.login( DB,USER, PASS);
 
-        client.close();
+		// print user info
+		System.out.println(api.info());
+
+		client.close();
     }
 
 }

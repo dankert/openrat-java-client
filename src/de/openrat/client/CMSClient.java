@@ -22,14 +22,10 @@ package de.openrat.client;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
-import de.openrat.client.action.Action;
-import de.openrat.client.action.CMSAction;
-import de.openrat.client.action.LoginAction;
 import de.openrat.client.util.CMSConnection;
+import de.openrat.client.util.CMSRequest;
 
 /**
  * Client for the OpenRat Content Management System. <br>
@@ -210,6 +206,8 @@ public class CMSClient
 	 * closing all resources. Normally, you do not need to call this, because
 	 * the sockets are closed after each call. this is only for future versions
 	 * wenn keep-alive is implemented.
+	 *
+	 * thank you for calling this method.
 	 * 
 	 */
 	public void close()
@@ -243,28 +241,13 @@ public class CMSClient
 
 
 	/**
-	 * Creates a more low-level common action.
+	 * Creating a new CMS request.
 	 *
-	 * @return new action instance
+	 * @return CMS request
 	 */
-	public CMSAction createAction() {
-		return createAction( CMSAction.class );
+	public CMSRequest request(String action, String method ) {
+		return new CMSRequest(this.connection, action,method);
 	}
 
 
-	/**
-	 * Creates a custom action.
-	 *
-	 * @param actionClass the action class to instantiate
-	 * @param <T>
-	 * @return new action instance
-	 */
-	public <T extends Action> T createAction(Class<T> actionClass) {
-		try {
-			Constructor<T> c = actionClass.getConstructor(CMSConnection.class);
-			return c.newInstance( this.connection );
-		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-			throw new IllegalArgumentException("The action '" + actionClass.getSimpleName() + " could not be created: " + e.getMessage(), e);
-		}
-	}
 }
